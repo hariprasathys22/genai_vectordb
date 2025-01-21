@@ -33,7 +33,11 @@ class QdrantAdapter {
    */
   async insertVectors(
     collectionName: string,
-    vectors: Array<{ id: number; vector: number[]; payload?: Record<string, unknown> }>
+    vectors: Array<{
+      id: number;
+      vector: number[];
+      payload?: Record<string, unknown>;
+    }>
   ): Promise<void> {
     try {
       // Validate data structure
@@ -45,14 +49,43 @@ class QdrantAdapter {
           throw new Error(`Invalid vector: Missing or invalid 'vector' field.`);
         }
       });
-  
+
       // Upsert points into Qdrant
       await this.client.upsert(collectionName, { points: vectors });
-      console.log(`Inserted ${vectors.length} vectors into '${collectionName}'.`);
+      console.log(
+        `Inserted ${vectors.length} vectors into '${collectionName}'.`
+      );
     } catch (error) {
       console.error("Error inserting vectors into Qdrant:", error);
       throw error; // Rethrow the error for upstream handling
     }
+  }
+
+  /**
+   * Search for similar vectors in a collection.
+   * @param collectionName - Name of the collection.
+   * @param queryVector - Vector to search for.
+   * @param limit - Number of results to return.
+   */
+
+  async search(
+    collectionName: string,
+    queryVector: number[],
+    limit: number = 10
+  ): Promise<any> {
+    const result = await this.client.search(collectionName, {
+      vector: queryVector,
+      limit: limit
+    });
+    return result;
+  }
+  /**
+   * Delete a collection.
+   * @param collectionName - Name of the collection to delete.
+   */
+  async deleteCollection(collectionName: string): Promise<void> {
+    await this.client.deleteCollection(collectionName);
+    console.log(`Collection '${collectionName}' deleted successfully.`);
   }
 }
 export default QdrantAdapter;
