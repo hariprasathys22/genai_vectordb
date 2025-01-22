@@ -16,16 +16,26 @@ class QdrantAdapter {
    */
   async createCollection(
     collectionName: string,
-    vectorSize: number
   ): Promise<void> {
     await this.client.createCollection(collectionName, {
       vectors: {
-        size: vectorSize,
+        size: 768,
         distance: "Cosine",
       },
     });
     console.log(`Collection '${collectionName}' created successfully.`);
   }
+
+  /**
+   * List all collections in Qdrant.
+   * @returns List of collections.
+   * */
+
+  async listAllCollections(): Promise<any>{
+    const result = await this.client.getCollections();
+    return result;
+  }
+
   /**
    * Insert vectors into a collection.
    * @param collectionName - Name of the collection.
@@ -50,6 +60,7 @@ class QdrantAdapter {
         }
       });
 
+      // Upsert points into Qdrant
       await this.client.upsert(collectionName, { points: vectors });
       console.log(
         `Inserted ${vectors.length} vectors into '${collectionName}'.`
@@ -58,6 +69,33 @@ class QdrantAdapter {
       console.error("Error inserting vectors into Qdrant:", error);
       throw error;
     }
+  }
+
+  /**
+   * Search for similar vectors in a collection.
+   * @param collectionName - Name of the collection.
+   * @param queryVector - Vector to search for.
+   * @param limit - Number of results to return.
+   */
+
+  async search(
+    collectionName: string,
+    queryVector: number[],
+    limit: number = 10
+  ): Promise<any> {
+    const result = await this.client.search(collectionName, {
+      vector: queryVector,
+      limit: limit
+    });
+    return result;
+  }
+  /**
+   * Delete a collection.
+   * @param collectionName - Name of the collection to delete.
+   */
+  async deleteCollection(collectionName: string): Promise<void> {
+    await this.client.deleteCollection(collectionName);
+    console.log(`Collection '${collectionName}' deleted successfully.`);
   }
 }
 export default QdrantAdapter;

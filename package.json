@@ -13,9 +13,12 @@
   "description": "",
   "dependencies": {
     "@qdrant/js-client-rest": "^1.13.0",
+    "@types/cors": "^2.8.17",
     "axios": "^1.7.9",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "p1": "file:"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",

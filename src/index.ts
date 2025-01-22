@@ -1,22 +1,21 @@
 // src/index.ts
-import express from "express";
-import dotenv from "dotenv";
-import embeddingRoute from "./presentation/routes/embeddingRoute";
-import QdrantAdapter from "./infrastructure/adapters/QdrantAdapter";
-
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import embeddingRoute from './presentation/routes/embeddingRoute'
+import queryRoute from './presentation/routes/queryRoute'
+import qdrantRoute from './presentation/routes/qdrantRoute'
 dotenv.config();
 
 const app = express();
-app.use(express.json());
 const PORT = process.env.PORT ?? 5000;
-// const HOST = process.env.HOST ?? "localhost";
-// const QDRANT_PORT = Number(process.env.QDRANT_PORT) || 6333;
-// const qdrantAdapter = new QdrantAdapter(
-//   HOST, QDRANT_PORT
-// );
-// qdrantAdapter.createCollection("Text_management", 1000);
+app.use(cors());
+app.use(express.json());
 
-app.use("/api", embeddingRoute);
+app.use("/api", embeddingRoute)
+app.use("/api", queryRoute)
+app.use("/api/collection",qdrantRoute)
+
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
 });
