@@ -121,6 +121,8 @@ class QdrantAdapter {
     return result;
   }
 
+  
+
 
 }
 export default QdrantAdapter;
