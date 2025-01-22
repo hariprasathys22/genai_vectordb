@@ -15,7 +15,7 @@ const TRANSFORMER_URL =
 const textToQdrantServices = new TextToQdrantServices(
   embedAdapter,
   qdrantAdapter,
-  "Hotel_management"
+  "new_demo"
 );
 
 export const TextEmbeddingController = async (req: Request, res: Response) => {

@@ -28,17 +28,29 @@ class TextToQdrantServices{
    * Adds a text input to Qdrant by generating its embedding and storing it.
    * @param embeddingEntity - The TextEmbedding entity containing input data.
    */
-    async addText(id: number, text: string, payload?: Record<string, unknown>): Promise<void>{
-        const embedding = await this.embedAdapter.generateEmbeddings(text)
-
-        await this.qdrantAdapter.insertVectors(this.collectionName, [
-            {
-                id, vector: embedding, payload
-            }
-        ])
-        console.log(`Text "${text} added to collection "${this.collectionName}"`);
+    async addText(id: number, text: string, payload?:  Record<string, unknown>): Promise<void> {
+        console.log("Received ID:", id);
+        console.log("Received Text:", text);
+        console.log("Received Payload:", payload);
+      
+        const embedding = await this.embedAdapter.generateEmbeddings(text);
+        console.log("Generated Embedding:", embedding);
         
-    }
+        // Ensure valid structure for vectors
+        const vectors: Array<{ id: number; vector: number[]; payload?: Record<string, unknown> }> = [
+            {
+              id, // Ensure this is a number
+              vector: embedding, // Ensure embedding is an array of numbers
+              payload: payload || {}, // Optional payload
+            },
+          ];
+          
+      
+        console.log("Vector to insert:", JSON.stringify(vectors, null, 2));
+      
+        await this.qdrantAdapter.insertVectors(this.collectionName, vectors);
+      }
+      
 }
 
 export default TextToQdrantServices

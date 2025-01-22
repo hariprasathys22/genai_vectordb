@@ -6,7 +6,7 @@ class QdrantAdapter {
   constructor(apiHost: string, apiPort: number) {
     this.client = new QdrantClient({
       host: apiHost,
-      port: apiPort
+      port: apiPort,
     });
   }
   /**
@@ -21,8 +21,8 @@ class QdrantAdapter {
     await this.client.createCollection(collectionName, {
       vectors: {
         size: vectorSize,
-        distance: "Cosine"
-      }
+        distance: "Cosine",
+      },
     });
     console.log(`Collection '${collectionName}' created successfully.`);
   }
@@ -33,10 +33,14 @@ class QdrantAdapter {
    */
   async insertVectors(
     collectionName: string,
-    vectors: Array<{ id: number; vector: number[]; payload?: Record<string, unknown> }>
+    vectors: Array<{
+      id: number;
+      vector: number[];
+      payload?: Record<string, unknown>;
+    }>
   ): Promise<void> {
+    console.log("Vectors being inserted:", JSON.stringify(vectors, null, 2));
     try {
-      // Validate data structure
       vectors.forEach((point) => {
         if (typeof point.id !== "number") {
           throw new Error(`Invalid vector: Missing or invalid 'id' field.`);
@@ -45,13 +49,14 @@ class QdrantAdapter {
           throw new Error(`Invalid vector: Missing or invalid 'vector' field.`);
         }
       });
-  
-      // Upsert points into Qdrant
+
       await this.client.upsert(collectionName, { points: vectors });
-      console.log(`Inserted ${vectors.length} vectors into '${collectionName}'.`);
+      console.log(
+        `Inserted ${vectors.length} vectors into '${collectionName}'.`
+      );
     } catch (error) {
       console.error("Error inserting vectors into Qdrant:", error);
-      throw error; // Rethrow the error for upstream handling
+      throw error;
     }
   }
 }
