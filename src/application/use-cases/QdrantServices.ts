@@ -39,6 +39,30 @@ class QdrantServices {
             throw new Error("Error while listing collections");
         }
     }
+    async listACollectionService(collectionName: string):Promise<any>{
+        try{
+            return await this.qdrantAdapter.listCollection(collectionName)
+        }catch(e){
+            console.log("Error while listing collection", e);
+            throw new Error("Error while listing collection");
+        }
+    } 
+    async getAllVectors(collectionName: string):Promise<any>{
+        try{
+            return await this.qdrantAdapter.retrieveVectorPoints(collectionName);
+        }catch(e){
+            console.log("Error while retrieving vectors", e);
+            throw new Error("Error while retrieving vectors");
+        }
+    }
+    async getAVector(collectionName: string, vectorId: string):Promise<any>{
+        try{
+            return await this.qdrantAdapter.retrieveSinglePoint(collectionName, vectorId);
+        }catch(e){
+            console.log("Error while retrieving vector", e);
+            throw new Error("Error while retrieving vector");
+        }
+    }
 
 }
 

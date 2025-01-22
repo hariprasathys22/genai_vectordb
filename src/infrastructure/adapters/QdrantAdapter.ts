@@ -6,7 +6,7 @@ class QdrantAdapter {
   constructor(apiHost: string, apiPort: number) {
     this.client = new QdrantClient({
       host: apiHost,
-      port: apiPort,
+      port: apiPort
     });
   }
   /**
@@ -14,14 +14,12 @@ class QdrantAdapter {
    * @param collectionName - Name of the collection.
    * @param vectorSize - Dimensionality of the vectors.
    */
-  async createCollection(
-    collectionName: string,
-  ): Promise<void> {
+  async createCollection(collectionName: string): Promise<void> {
     await this.client.createCollection(collectionName, {
       vectors: {
         size: 768,
-        distance: "Cosine",
-      },
+        distance: "Cosine"
+      }
     });
     console.log(`Collection '${collectionName}' created successfully.`);
   }
@@ -31,8 +29,17 @@ class QdrantAdapter {
    * @returns List of collections.
    * */
 
-  async listAllCollections(): Promise<any>{
+  async listAllCollections(): Promise<any> {
     const result = await this.client.getCollections();
+    return result.collections;
+  }
+  /**
+   * List a collection in Qdrant.
+   * @param collectionName - Name of the collection.
+   * @returns Collection details.
+   */
+  async listCollection(collectionName: string): Promise<any> {
+    const result = await this.client.getCollection(collectionName);
     return result;
   }
 
@@ -41,10 +48,11 @@ class QdrantAdapter {
    * @param collectionName - Name of the collection.
    * @param vectors - Array of objects with id, vector, and optional payload.
    */
+
   async insertVectors(
     collectionName: string,
     vectors: Array<{
-      id: number;
+      id: string;
       vector: number[];
       payload?: Record<string, unknown>;
     }>
@@ -52,7 +60,7 @@ class QdrantAdapter {
     console.log("Vectors being inserted:", JSON.stringify(vectors, null, 2));
     try {
       vectors.forEach((point) => {
-        if (typeof point.id !== "number") {
+        if (typeof point.id !== "string") {
           throw new Error(`Invalid vector: Missing or invalid 'id' field.`);
         }
         if (!Array.isArray(point.vector)) {
@@ -97,5 +105,22 @@ class QdrantAdapter {
     await this.client.deleteCollection(collectionName);
     console.log(`Collection '${collectionName}' deleted successfully.`);
   }
+
+  /**
+   * Retrieve all vector points from a collection.
+   * @param collectionName - Name of the collection.
+   * @returns All vector points in the collection.
+   */
+  async retrieveVectorPoints(collectionName: string): Promise<any>{
+    const result = await this.client.scroll(collectionName);
+    return result;
+  }
+
+  async retrieveSinglePoint(collectionName: string, id: string): Promise<any>{
+    const result = await this.client.retrieve(collectionName, { ids: [id] });
+    return result;
+  }
+
+
 }
 export default QdrantAdapter;

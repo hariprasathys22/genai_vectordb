@@ -3,6 +3,6 @@ import { TextEmbeddingController } from "../controllers/TextController";
 
 const router = express.Router()
 
-router.post("/addEmbedding", TextEmbeddingController)
+router.post("/addEmbedding/:collectionName", TextEmbeddingController)
 
 export default router;

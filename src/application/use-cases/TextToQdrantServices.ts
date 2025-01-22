@@ -27,7 +27,7 @@ class TextToQdrantServices {
    * @param embeddingEntity - The TextEmbedding entity containing input data.
    */
   async addText(
-    id: number,
+    id: string,
     text: string,
     payload?: Record<string, any>
   ): Promise<void> {

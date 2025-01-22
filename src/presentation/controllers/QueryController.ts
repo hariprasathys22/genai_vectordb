@@ -13,9 +13,11 @@ const emberAdapter = new EmberAdapter(TRANSFORMER_URL);
 const llamaAdapter = new LlamaAdapter(TRANSFORMER_URL);
 const qdrantAdapter = new QdrantAdapter(HOST, QDRANT_PORT);
 
-const queryProcessing = new QueryProcessingService(llamaAdapter, qdrantAdapter, "new_demo", emberAdapter);
+
 
 export const QueryController = async(req: Request, res: Response) =>{
+    const collectionName = req.params.collectionName;
+    const queryProcessing = new QueryProcessingService(llamaAdapter, qdrantAdapter, collectionName, emberAdapter);
     const {query, limit} = req.body;
     try{
         const results = await queryProcessing.processingQueryAndSearch(query, limit);

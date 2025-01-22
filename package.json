@@ -18,7 +18,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "p1": "file:"
+    "p1": "file:",
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
