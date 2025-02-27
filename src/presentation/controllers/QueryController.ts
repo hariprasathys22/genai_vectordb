@@ -18,10 +18,10 @@ const qdrantAdapter = new QdrantAdapter(HOST, QDRANT_PORT);
 export const QueryController = async(req: Request, res: Response) =>{
     const collectionName = req.params.collectionName;
     const queryProcessing = new QueryProcessingService(llamaAdapter, qdrantAdapter, collectionName, emberAdapter);
-    const {query, limit} = req.body;
+    const {query, chatId } = req.body;
     try{
-        const results = await queryProcessing.processingQueryAndSearch(query, limit);
-        res.status(200).send({message: results});
+        const results = await queryProcessing.processingQueryAndSearch(query, chatId);
+        res.status(200).send({ chatId: results.chatId, response: results.response });
     }catch(e){
         console.log("there is a error while storing in db", e);
         throw new Error("Something went wrong");

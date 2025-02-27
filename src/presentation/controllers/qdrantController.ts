@@ -60,3 +60,13 @@ export const retrieveSingleVectorController = async(req: Request, res: Response)
         throw new Error("Error while retrieving single vector");
     }
 }
+export const ChatHistoryController = async (req: Request, res: Response) => {
+    const { chatId, collectionName } = req.params;
+    try {
+        const chatHistory = await qdrantAdapter.getChatHistory(collectionName, chatId);
+        res.status(200).send({ chatHistory });
+    } catch (e) {
+        console.error("Error fetching chat history:", e);
+        res.status(500).send({ error: "Something went wrong" });
+    }
+};

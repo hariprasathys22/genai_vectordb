@@ -6,7 +6,7 @@ class QdrantAdapter {
   constructor(apiHost: string, apiPort: number) {
     this.client = new QdrantClient({
       host: apiHost,
-      port: apiPort
+      port: apiPort,
     });
   }
   /**
@@ -18,8 +18,8 @@ class QdrantAdapter {
     await this.client.createCollection(collectionName, {
       vectors: {
         size: 768,
-        distance: "Cosine"
-      }
+        distance: "Cosine",
+      },
     });
     console.log(`Collection '${collectionName}' created successfully.`);
   }
@@ -93,7 +93,7 @@ class QdrantAdapter {
   ): Promise<any> {
     const result = await this.client.search(collectionName, {
       vector: queryVector,
-      limit: limit
+      limit: limit,
     });
     return result;
   }
@@ -111,18 +111,32 @@ class QdrantAdapter {
    * @param collectionName - Name of the collection.
    * @returns All vector points in the collection.
    */
-  async retrieveVectorPoints(collectionName: string): Promise<any>{
+  async retrieveVectorPoints(collectionName: string): Promise<any> {
     const result = await this.client.scroll(collectionName);
     return result;
   }
 
-  async retrieveSinglePoint(collectionName: string, id: string): Promise<any>{
+  async retrieveSinglePoint(collectionName: string, id: string): Promise<any> {
     const result = await this.client.retrieve(collectionName, { ids: [id] });
     return result;
   }
+  async getChatHistory(collectionName: string, chatId: string): Promise<any[]> {
+    console.log("Fetching chat history for:", chatId);
 
-  
+    const result = await this.client.scroll(collectionName, {
+      filter: {
+        must: [{ key: "chatId", match: { value: chatId } }],
+      },
+      limit: 50, // Adjust as needed
+      with_payload: true, // ✅ Ensure we get payload data
+      with_vector: false, // ✅ We don't need the vectors
+    });
 
-
+    return result.points.map((item: any) => ({
+      type: item.payload.type,
+      text: item.payload.text,
+      timestamp: item.payload.timestamp,
+    }));
+  }
 }
 export default QdrantAdapter;
