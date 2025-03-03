@@ -31,10 +31,10 @@ class QueryProcessingService {
     console.log("Received Query:", query);
 
     if (!chatId) {
-        chatId = uuidv4();
-        console.log("New Chat Created: ", chatId);
+      chatId = uuidv4();
+      console.log("New Chat Created: ", chatId);
     } else {
-        console.log("Using Existing Chat: ", chatId);
+      console.log("Using Existing Chat: ", chatId);
     }
 
     // 1️⃣ Convert query into an embedding
@@ -44,27 +44,23 @@ class QueryProcessingService {
     // 2️⃣ Search the entire collection (NOT filtered by chatId)
     console.log("Searching Qdrant for relevant information...");
     const searchResults = await this.qdrantAdapter.search(
-        this.collectionname,
-        queryEmbedding,
-        3 // Search for the top 3 similar entries
+      this.collectionname,
+      queryEmbedding,
+      3 // Search for the top 3 similar entries
     );
     console.log("Qdrant Search Results:", searchResults);
-
-    // 3️⃣ Check if we found a relevant response
-    if (searchResults.length > 0 && searchResults[0].score > 0.85) {
-        console.log("Returning cached response from Qdrant.");
-        return { chatId, response: searchResults[0].payload.text };
-    }
-
-    // 4️⃣ No relevant past response found, generate a new response using Llama
-    console.log("No relevant match found. Generating new response...");
-    
+    const filteredResults = searchResults.filter((hit: any) => hit.payload?.type !== "query" && hit.payload?.type !== "response");
     // 🔹 Pass context from Qdrant search results to Llama
-    const context = searchResults
-        .filter((hit: any) => "text" in hit.payload && hit.score > 0.75) // ✅ Only take relevant responses
-        .slice(0, 3) // ✅ Limit to 3 best matches
-        .map((hit: any) => hit.payload.text)
-        .join("\n\n"); // ✅ Better formatting
+    const context = filteredResults
+      .filter(
+        (hit: any) =>
+          "text" in hit.payload &&
+          hit.score > 0.75 &&
+          hit.payload?.type !== "query"
+      )
+      .slice(0, 3) // ✅ Limit to 3 best matches
+      .map((hit: any) => hit.payload.text)
+      .join("\n\n"); // ✅ Better formatting
 
     console.log("Context for Llama:", context);
 
@@ -72,7 +68,9 @@ class QueryProcessingService {
     console.log("Llama Response:", llamaResponse);
 
     // 5️⃣ Convert response into an embedding
-    const responseEmbedding = await this.embedAdatper.generateEmbeddings(llamaResponse);
+    const responseEmbedding = await this.embedAdatper.generateEmbeddings(
+      llamaResponse
+    );
     console.log("Generated Response Embedding:", responseEmbedding);
 
     // 6️⃣ Generate unique IDs for query & response
@@ -81,38 +79,37 @@ class QueryProcessingService {
 
     // 7️⃣ Store the **query** in Qdrant (without chatId filtering)
     await this.qdrantAdapter.insertVectors(this.collectionname, [
-        {
-            id: queryId,
-            vector: queryEmbedding,
-            payload: {
-                chatId, // ✅ Store chatId but NOT filter by it
-                type: "query",
-                text: query,
-                timestamp: new Date().toISOString(),
-            },
+      {
+        id: queryId,
+        vector: queryEmbedding,
+        payload: {
+          chatId, // ✅ Store chatId but NOT filter by it
+          type: "query",
+          text: query,
+          timestamp: new Date().toISOString(),
         },
+      },
     ]);
     console.log("Stored Query in Qdrant.");
 
     // 8️⃣ Store the **response** in Qdrant
     await this.qdrantAdapter.insertVectors(this.collectionname, [
-        {
-            id: responseId,
-            vector: responseEmbedding,
-            payload: {
-                chatId,
-                type: "response",
-                text: llamaResponse,
-                timestamp: new Date().toISOString(),
-            },
+      {
+        id: responseId,
+        vector: responseEmbedding,
+        payload: {
+          chatId,
+          type: "response",
+          text: llamaResponse,
+          timestamp: new Date().toISOString(),
         },
+      },
     ]);
     console.log("Stored Response in Qdrant.");
 
     // 9️⃣ Return the new response
     return { chatId, response: llamaResponse };
-}
-
+  }
 }
 
 export default QueryProcessingService;

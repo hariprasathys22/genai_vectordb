@@ -25,7 +25,7 @@ class LlamaAdapter {
 
       // 3️⃣ Send request to Llama API
       const response = await axios.post(
-        `${this.apiUrl}/v1/chat/completions`,
+        `${this.apiUrl}v1/chat/completions`,
         {
           model: "llama3.1:latest",
           messages: [
