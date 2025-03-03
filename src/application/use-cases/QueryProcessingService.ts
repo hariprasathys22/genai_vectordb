@@ -49,7 +49,10 @@ class QueryProcessingService {
       3 // Search for the top 3 similar entries
     );
     console.log("Qdrant Search Results:", searchResults);
-    const filteredResults = searchResults.filter((hit: any) => hit.payload?.type !== "query" && hit.payload?.type !== "response");
+    const filteredResults = searchResults.filter(
+      (hit: any) =>
+        hit.payload?.type !== "query" && hit.payload?.type !== "response"
+    );
     // 🔹 Pass context from Qdrant search results to Llama
     const context = filteredResults
       .filter(
@@ -78,7 +81,7 @@ class QueryProcessingService {
     const responseId = uuidv4();
 
     // 7️⃣ Store the **query** in Qdrant (without chatId filtering)
-    await this.qdrantAdapter.insertVectors(this.collectionname, [
+    await this.qdrantAdapter.insertVectors("queryResponse", [
       {
         id: queryId,
         vector: queryEmbedding,
@@ -93,7 +96,7 @@ class QueryProcessingService {
     console.log("Stored Query in Qdrant.");
 
     // 8️⃣ Store the **response** in Qdrant
-    await this.qdrantAdapter.insertVectors(this.collectionname, [
+    await this.qdrantAdapter.insertVectors("queryResponse", [
       {
         id: responseId,
         vector: responseEmbedding,
@@ -109,6 +112,26 @@ class QueryProcessingService {
 
     // 9️⃣ Return the new response
     return { chatId, response: llamaResponse };
+  }
+
+  async CreateChat(
+    chatId: string,
+    chatName: string,
+    collectionName: string
+  ): Promise<any> {
+    const chatEmbedding = await this.embedAdatper.generateEmbeddings(chatName);
+    const chat = await this.qdrantAdapter.insertVectors(collectionName, [
+      {
+        id: chatId,
+        vector: chatEmbedding,
+        payload: {
+          chatId,
+          chatName,
+          timestamp: new Date().toISOString(),
+        },
+      },
+    ]);
+    return { chat };
   }
 }
 
