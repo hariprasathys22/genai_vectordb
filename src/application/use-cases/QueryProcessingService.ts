@@ -30,12 +30,12 @@ class QueryProcessingService {
   async processingQueryAndSearch(query: string, chatId?: string): Promise<any> {
     console.log("Received Query:", query);
 
-    if (!chatId) {
-      chatId = uuidv4();
-      console.log("New Chat Created: ", chatId);
-    } else {
-      console.log("Using Existing Chat: ", chatId);
-    }
+    // if (!chatId) {
+    //   chatId = uuidv4();
+    //   console.log("New Chat Created: ", chatId);
+    // } else {
+    //   console.log("Using Existing Chat: ", chatId);
+    // }
 
     // 1️⃣ Convert query into an embedding
     const queryEmbedding = await this.embedAdatper.generateEmbeddings(query);
