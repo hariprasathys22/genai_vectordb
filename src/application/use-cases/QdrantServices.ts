@@ -63,6 +63,7 @@ class QdrantServices {
             throw new Error("Error while retrieving vector");
         }
     }
+ 
 
 }
 

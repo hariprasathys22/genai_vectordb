@@ -32,3 +32,23 @@ export const TextEmbeddingController = async (req: Request, res: Response) => {
     throw new Error("Something went wrong");
   }
 };
+interface MulterRequest extends Request {
+  file: Express.Multer.File;
+}
+export const ExcelEmbeddingController = async (req: Request, res: Response) => {
+  const collectionName = req.params.collectionName;
+  const multerReq = req as MulterRequest;
+  const file = multerReq.file;
+    if (!file) {
+      res.status(400).send("No file uploaded.");
+      return;
+    }
+  const textToQdrantServices = new TextToQdrantServices(
+    embedAdapter,
+    qdrantAdapter,
+    collectionName
+  );
+  const uploadExcelService = await textToQdrantServices.processExcelBuffer(file.buffer);
+  res.status(200).send({ message: "Excel file uploaded successfully", data:  uploadExcelService})
+
+}
