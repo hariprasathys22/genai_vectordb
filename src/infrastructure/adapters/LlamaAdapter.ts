@@ -27,12 +27,12 @@ class LlamaAdapter {
       const response = await axios.post(
         `${this.apiUrl}v1/chat/completions`,
         {
-          model: "llama3.1:latest",
+          model: "deepseek-r1:7b",
           messages: [
             { role: "system", content: systemMessage },
             ...this.conversationHistory, // Maintain chat history
           ],
-          temperature: 0.9,
+          temperature: 0.2,
         },
         {
           headers: {

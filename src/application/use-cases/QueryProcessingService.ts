@@ -32,14 +32,13 @@ class QueryProcessingService {
   
     // 1️⃣ Convert query into an embedding
     const queryEmbedding = await this.embedAdatper.generateEmbeddings(query);
-    // console.log("Generated Query Embedding:", queryEmbedding);
   
     // 2️⃣ Search the entire collection (NOT filtered by chatId)
     console.log("Searching Qdrant for relevant information...");
     const searchResults = await this.qdrantAdapter.search(
       this.collectionname,
       queryEmbedding,
-      3 // Search for the top 5 similar entries
+      3 // Search for the top 3 similar entries
     );
     console.log("Qdrant Search Results:", searchResults);
   
@@ -50,43 +49,54 @@ class QueryProcessingService {
     );
     console.log("Filtered Results:", filteredResults);
   
-    // 🔹 Build the context from filtered results
+    // 🔹 Build the context from filtered results (using a score threshold and taking up to 5 entries)
     const context = filteredResults
-      // Adjusted score threshold to 0.7
       .filter((hit: any) => hit.score > 0.4)
       .slice(0, 5)
       .map((hit: any) => JSON.stringify(hit.payload))
       .join("\n\n");
-  
     console.log("Context for Llama:", context);
   
     // 3️⃣ Define a system prompt that instructs Llama to use only provided context.
     // If no context is available, it should respond with a message stating that no relevant information exists.
-    const systemPrompt = "System: You are an assistant that relies solely on the provided context. Do not search anywhere else. If no relevant context is provided, respond with 'No relevant information available'.";
-    
+    const systemPrompt =
+      "System: You are an assistant that relies solely on the provided context. Do not search anywhere else. If no relevant context is provided, respond with 'No relevant information available'. Analyze the context and make a sentence and reply for the given question alone. Do not use any other information. dont output the content inside <think> tag";
+  
     // 4️⃣ Combine the system prompt with the original query.
-    // This combined query is used only for processing with Llama.
     const combinedQuery = `${systemPrompt}\n\nUser Query: ${query}`;
   
     // 5️⃣ Process the combined query along with the context using Llama.
-    const llamaResponse = await this.llamaAdapter.processQuery(combinedQuery, context);
-    // console.log("Llama Response:", llamaResponse);
+    let llamaResponse = await this.llamaAdapter.processQuery(combinedQuery, context);
+    console.log("Original Llama Response:", llamaResponse);
   
-    // 6️⃣ Convert Llama response into an embedding
-    const responseEmbedding = await this.embedAdatper.generateEmbeddings(llamaResponse);
-    // console.log("Generated Response Embedding:", responseEmbedding);
+    // 🔹 Extract the internal thought from the response (i.e., the text between <think> and </think> tags)
+    const thinkRegex = /<think>([\s\S]*?)<\/think>/;
+    const match = llamaResponse.match(thinkRegex);
   
-    // 7️⃣ Generate unique IDs for query & response
+    let internalThought = "";
+    let publicResponse = llamaResponse;
+    if (match) {
+      internalThought = match[1].trim();
+      // Remove the <think> block from the response to create the public response
+      publicResponse = llamaResponse.replace(thinkRegex, "").trim();
+    }
+    console.log("Internal Thought Process:", internalThought);
+    console.log("Public Response:", publicResponse);
+  
+    // 6️⃣ Convert the public response into an embedding
+    const responseEmbedding = await this.embedAdatper.generateEmbeddings(publicResponse);
+  
+    // 7️⃣ Generate unique IDs for the query & response
     const queryId = uuidv4();
     const responseId = uuidv4();
   
-    // 8️⃣ Store the original **query** in Qdrant (without the system prompt)
+    // 8️⃣ Store the original query in Qdrant (without the system prompt)
     await this.qdrantAdapter.insertVectors("queryResponse", [
       {
         id: queryId,
         vector: queryEmbedding,
         payload: {
-          chatId, // Store chatId but NOT filter by it
+          chatId, // Store chatId but do not filter by it
           type: "query",
           text: query,
           timestamp: new Date().toISOString()
@@ -95,7 +105,7 @@ class QueryProcessingService {
     ]);
     console.log("Stored Query in Qdrant.");
   
-    // 9️⃣ Store the **response** in Qdrant
+    // 9️⃣ Store the public response in Qdrant
     await this.qdrantAdapter.insertVectors("queryResponse", [
       {
         id: responseId,
@@ -103,16 +113,34 @@ class QueryProcessingService {
         payload: {
           chatId,
           type: "response",
-          text: llamaResponse,
+          text: publicResponse,
           timestamp: new Date().toISOString()
         }
       }
     ]);
     console.log("Stored Response in Qdrant.");
   
-    // 10️⃣ Return the new response
-    return { chatId, response: llamaResponse };
+    // 🔸 Optionally, store the internal thought separately if needed
+    if (internalThought) {
+      await this.qdrantAdapter.insertVectors("internalThoughts", [
+        {
+          id: uuidv4(),
+          vector: await this.embedAdatper.generateEmbeddings(internalThought),
+          payload: {
+            chatId,
+            type: "internal",
+            text: internalThought,
+            timestamp: new Date().toISOString()
+          }
+        }
+      ]);
+      console.log("Stored Internal Thought in Qdrant.");
+    }
+  
+    // 🔟 Return the public response (without internal thinking) to the user
+    return { chatId, response: publicResponse };
   }
+  
   
 
   async CreateChat(
