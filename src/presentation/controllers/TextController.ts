@@ -48,7 +48,34 @@ export const ExcelEmbeddingController = async (req: Request, res: Response) => {
     qdrantAdapter,
     collectionName
   );
-  const uploadExcelService = await textToQdrantServices.processExcelBuffer(file.buffer);
+  const uploadExcelService = await textToQdrantServices.processAndUploadExcelBuffer(file.buffer);
   res.status(200).send({ message: "Excel file uploaded successfully", data:  uploadExcelService})
 
 }
+export const PdfEmbeddingController = async (req: Request, res: Response) => {
+  const collectionName = req.params.collectionName;
+  const multerReq = req as any; // Assuming your Request is extended with Multer's file property
+  const file = multerReq.file;
+  
+  if (!file) {
+    res.status(400).send("No file uploaded.");
+    return;
+  }
+  
+  const pdfService =  new TextToQdrantServices(
+    embedAdapter,
+    qdrantAdapter,
+    collectionName
+  );
+  
+  try {
+    const extractedText = await pdfService.processAndUploadPdfBuffer(file.buffer);
+    res.status(200).send({
+      message: "PDF file processed and uploaded successfully",
+      data: extractedText
+    });
+  } catch (error) {
+    console.error("Error processing PDF:", error);
+    res.status(500).send("Error processing PDF file.");
+  }
+};

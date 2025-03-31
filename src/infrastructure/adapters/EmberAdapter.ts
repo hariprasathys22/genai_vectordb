@@ -21,7 +21,7 @@ class EmberAdapter {
                 "prompt": text
             }
         )
-        console.log(response.data.embedding);
+      
         
         return response.data.embedding
     } catch (e) {

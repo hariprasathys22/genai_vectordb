@@ -21,12 +21,14 @@
     "express": "^4.21.2",
     "multer": "^1.4.5-lts.2",
     "p1": "file:",
+    "pdf-parse": "^1.1.1",
     "uuid": "^11.1.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.7",
+    "@types/pdf-parse": "^1.1.4",
     "@types/uuid": "^10.0.0",
     "@types/xlsx": "^0.0.35",
     "nodemon": "^3.1.9",

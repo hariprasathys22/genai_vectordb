@@ -57,7 +57,7 @@ class QdrantAdapter {
       payload?: Record<string, unknown>;
     }>
   ): Promise<void> {
-    console.log("Vectors being inserted:", JSON.stringify(vectors, null, 2));
+    // console.log("Vectors being inserted:", JSON.stringify(vectors, null, 2));
     try {
       vectors.forEach((point) => {
         if (typeof point.id !== "string") {
@@ -70,9 +70,9 @@ class QdrantAdapter {
 
       // Upsert points into Qdrant
       await this.client.upsert(collectionName, { points: vectors });
-      console.log(
-        `Inserted ${vectors.length} vectors into '${collectionName}'.`
-      );
+      // console.log(
+      //   `Inserted ${vectors.length} vectors into '${collectionName}'.`
+      // );
     } catch (error) {
       console.error("Error inserting vectors into Qdrant:", error);
       throw error;

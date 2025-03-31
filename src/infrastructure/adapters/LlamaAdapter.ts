@@ -32,8 +32,7 @@ class LlamaAdapter {
             { role: "system", content: systemMessage },
             ...this.conversationHistory, // Maintain chat history
           ],
-          temperature: 0.7,
-          max_tokens: 526,
+          temperature: 0.9,
         },
         {
           headers: {
