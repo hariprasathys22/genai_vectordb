@@ -38,7 +38,7 @@ class QueryProcessingService {
     const searchResults = await this.qdrantAdapter.search(
       this.collectionname,
       queryEmbedding,
-      3 // Search for the top 3 similar entries
+      15 // Search for the top 3 similar entries
     );
     console.log("Qdrant Search Results:", searchResults);
   
@@ -52,7 +52,7 @@ class QueryProcessingService {
     // 🔹 Build the context from filtered results (using a score threshold and taking up to 5 entries)
     const context = filteredResults
       .filter((hit: any) => hit.score > 0.4)
-      .slice(0, 5)
+      .slice(0, 15)
       .map((hit: any) => JSON.stringify(hit.payload))
       .join("\n\n");
     console.log("Context for Llama:", context);
